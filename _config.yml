@@ -1,0 +1,10 @@
+title: My Clean Blog
+email: your@email.com
+description: >-
+  A clean Jekyll blog with Substack-style typography and GitHub-style code blocks.
+baseurl: ""
+url: "https://yourusername.github.io"
+theme: minima
+markdown: kramdown
+highlighter: rouge
+plugins: []
