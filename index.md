@@ -3,19 +3,16 @@ layout: default
 title: Home
 ---
 
-# Welcome to My Blog
+## Blog Posts
 
-This is a clean Jekyll blog inspired by Substack's typography and GitHub's code styling.
-
-```python
-def hello():
-    print("Hello, world!")
-```
-
----
-
-### 6. `Gemfile`
-```ruby
-source "https://rubygems.org"
-gem "github-pages", group: :jekyll_plugins
-```
+<ul>
+  {% for post in site.posts %}
+    <li>
+      <h3>
+        <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+      </h3>
+      <p><small>{{ post.date | date: "%B %d, %Y" }}</small></p>
+      <p>{{ post.excerpt }}</p>
+    </li>
+  {% endfor %}
+</ul>
