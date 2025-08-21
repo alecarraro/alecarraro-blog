@@ -12,7 +12,7 @@ title: GSoC 2025 Project with JuliaReach
 ## Table of Contents
 1. [Outline and Motivation](#outline-and-motivation)
 2. [Example](#Example)
-3. [My Contributions](#My-Contributions)
+3. [Contribution Overviews](#contributions-overview)
 4. [References](#references)
 
 ## Outline and Motivation
@@ -22,7 +22,7 @@ In complex or safety-critical systems, it is often impossible to predict exactly
 In [ReachabilityAnalysis.jl](https://github.com/JuliaReach/ReachabilityAnalysis.jl), several algorithms exist to compute these enclosures for different types of dynamical systems with uncertain inputs and initial states, including hybrid systems.  
 
 During my project, I focused on a fundamental class of models: linear time-invariant (LTI) systems with uncertain parameters.  
-An LTI system describes the evolution of the state vector \(x(t)\) under a fixed matrix \(A\):  
+An LTI system describes the evolution of the state vector $$x(t)$$ under a fixed matrix $$A$$:  
 
 $$x' = A x$$
 
@@ -32,13 +32,13 @@ Such systems are widely used because they arise naturally when linearizing nonli
 $$x' = A x, \quad x(0) \in X_0, \quad A \in \mathcal{A}$$
 
 Here:  
-- X₀ is the set of possible initial states, reflecting uncertainty at \(t=0\).  
-- \(𝒜\) is a set of possible system matrices, representing parameter uncertainty.  
+- $$X₀$$ is the set of possible initial states, reflecting uncertainty at $$t=t_0$$.  
+- $$\mathcal{A}$$ is a set of possible system matrices, representing parameter uncertainty.  
 
-The goal is to compute a tight over-approximation of all trajectories that can arise from *any* choice of initial state in \(X₀\) and *any* admissible dynamics in \(𝒜\). This is significantly more challenging than the classical case with a fixed \(A\), since the solution space must account for both state uncertainty and dynamics uncertainty simultaneously.  
+The goal is to compute a tight over-approximation of all trajectories that can arise from *any* choice of initial state in $$X₀$$ and *any* admissible dynamics in $$\mathcal{A}$$. This is significantly more challenging than the classical case with a fixed $$A$$, since the solution space must account for both state uncertainty and dynamics uncertainty simultaneously.  
 
 Huang et al. [1] introduced a dedicated algorithm for these parametric LTI systems with uncertain dynamics, which combines two modern set representations: matrix zonotopes for modeling uncertainty in the system matrix and sparse polynomial zonotopes (SPZs) for representing the reachable states.  
-The motivation for this choice becomes clear when we compare possible uncertainty models for \(A\) and discuss how to best enclose the evolving states.  
+The motivation for this choice becomes clear when we compare possible uncertainty models for $$A$$ and discuss how to best enclose the evolving states.  
 
 ---
 
@@ -52,16 +52,16 @@ This representation assumes that each entry of the matrix can vary independently
 
 To address this, Althoff [2] introduced matrix zonotopes, which generalize standard zonotopes to matrices:
 
-$$ \mathcal{Z} = \{ M_0 + \sum_{i=1}^p M_i \alpha_i \;\mid\; \alpha_i \in [-1,1] \} $$
+$$ \mathcal{Z} = \{ A_0 + \sum_{i=1}^p A_i \alpha_i \;\mid\; \alpha_i \in [-1,1] \} $$
 
-Here, \(M_0\) is the center matrix, and the \(M_i\) are generator matrices. Matrix zonotopes preserve correlations between matrix entries, unlike interval matrices that treat them as independent. This leads to significantly tighter enclosures for uncertain dynamics, making them a more accurate and efficient choice in reachability analysis.  
+Here, $$A_0$$ is the center matrix, and the $$A_i$$ are generator matrices. Matrix zonotopes preserve correlations between matrix entries, unlike interval matrices that treat them as independent. This leads to significantly tighter enclosures for uncertain dynamics, making them a more accurate and efficient choice in reachability analysis.  
 
 ---
 
 ### Why Sparse Polynomial Zonotopes for States?  
 
 Once the dynamics are modeled with matrix zonotopes, the reachable states need a representation that can handle the resulting complexity without becoming overly conservative.  
-Huang et al. use Sparse Polynomial Zonotopes (SPZs) for this task.  
+Huang et al. use aparse polynomial zonotopes for this task.  
 
 SPZs extend zonotopes with polynomial terms, allowing them to capture non-convex sets while remaining closed under Minkowski sums and linear maps, the core operations in reachability analysis. Their sparse structure keeps the representation efficient and makes them a natural fit alongside matrix zonotopes.  
 
@@ -118,6 +118,7 @@ In the tables below I summarize my contributions to the different packages in th
 
 ## References
 [1] Yushen Huang, Ertai Luo, Stanley Bak, Yifan Sun, *Reachability analysis for linear systems with uncertain parameters using polynomial zonotopes*, Nonlinear Analysis: Hybrid Systems, Volume 56, 2025, 101571, ISSN 1751-570X. [DOI](https://doi.org/10.1016/j.nahs.2024.101571)
+
 [2] Matthias Althoff, *Reachability Analysis and its Application to the Safety Assessment of Autonomous Cars*, PhD thesis, Technische Universität München, July 2010.
 
 [3] Niklas Kochdumper, Matthias Althoff, *Sparse Polynomial Zonotopes: A Novel Set Representation for Reachability Analysis*, IEEE Transactions on Automatic Control, Vol. 66, No. 9, Sept. 2021, pp. 4043–4058. [DOI](https://doi.org/10.1109/TAC.2020.3024348)
