@@ -76,16 +76,16 @@ In the tables below I summarize my contributions to the different packages in th
 
 | PR Title | PR # | Category |
 |----------|------|----------|
-| Add `overapproximate` for matrix zonotope exponential | #4000 | Feature |
-| Add operations on matrix zonotopes | #3999 | Feature |
-| Add `overapproximate` for matrix zonotope multiplication | #3996 | Feature |
-| Preserve `indexvector` in linear map for MZ | #3985 | Fix |
-| Extend `ExponentialMap` to support `MatrixZonotope`s | #3970 | Feature |
-| Add `linear_map` between MatrixZonotope and SPZ | #3969 | Feature |
-| Fix in-place scaling for `MatrixZonotope` | #3967 | Fix |
-| Add methods and type for `MatrixSets` | #3966 | Feature |
-| Add `norm` and `overapproximate_norm` for matrix zonotope | #3941 | Feature |
-| Refactor and extend `MatrixSets` module | #3933 | Refactor |
+| Add `overapproximate` for matrix zonotope exponential | [#4000](https://github.com/JuliaReach/LazySets.jl/pull/4000) | Feature |
+| Add operations on matrix zonotopes | [#3999](https://github.com/JuliaReach/LazySets.jl/pull/3999) | Feature |
+| Add `overapproximate` for matrix zonotope multiplication | [#3996](https://github.com/JuliaReach/LazySets.jl/pull/3996) | Feature |
+| Preserve `indexvector` in linear map for MZ | [#3985](https://github.com/JuliaReach/LazySets.jl/pull/3985) | Fix |
+| Extend `ExponentialMap` to support `MatrixZonotope`s | [#3970](https://github.com/JuliaReach/LazySets.jl/pull/3970) | Feature |
+| Add `linear_map` between MatrixZonotope and SPZ | [#3969](https://github.com/JuliaReach/LazySets.jl/pull/3969) | Feature |
+| Fix in-place scaling for `MatrixZonotope` | [#3967](https://github.com/JuliaReach/LazySets.jl/pull/3967) | Fix |
+| Add methods and type for `MatrixSets` | [#3966](https://github.com/JuliaReach/LazySets.jl/pull/3966) | Feature |
+| Add `norm` and `overapproximate_norm` for matrix zonotope | [#3941](https://github.com/JuliaReach/LazySets.jl/pull/3941) | Feature |
+| Refactor and extend `MatrixSets` module | [#3933](https://github.com/JuliaReach/LazySets.jl/pull/3933) | Refactor |
 
 ---
 
@@ -93,17 +93,17 @@ In the tables below I summarize my contributions to the different packages in th
 
 | PR Title | PR # | Category |
 |----------|------|----------|
-| Optimize `remove_redundant_generators` | #3998 | Feature |
-| Improve `remove_redundant_generators` for `SPZ` | #3986 | Improvement |
-| Add `overapproximate` for exponential map for `SPZ` and `Zonotope` | #3979 | Feature |
-| Fix `isuniversal` and constructor for `Polygon` | #3978 | Fix |
-| Preserve ID in `minkowski_sum` and `cartesian_product` between `SPZ` and `Zonotope` | #3977 | Improvement |
-| Make `overapproximate` of ASPZ with `UnionSetArray{Zonotope}` more robust | #3972 | Improvement |
-| Add overapproximation of the l1 norm of a `Zonotope` | #3925 | Feature |
-| Faster l1 norm for `AbstractZonotope` | #3924 | Improvement |
-| Add `scale` for `SPZ` | #3908 | Feature |
-| Add `merge_id` and generalize `exact_sum` for `SPZ` | #3905 | Feature |
-| Add sampler for sparse polynomial zonotopes | #3847 | Feature |
+| Optimize `remove_redundant_generators` | [#3998](https://github.com/JuliaReach/LazySets.jl/pull/3998) | Feature |
+| Improve `remove_redundant_generators` for `SPZ` | [#3986](https://github.com/JuliaReach/LazySets.jl/pull/3986) | Improvement |
+| Add `overapproximate` for exponential map for `SPZ` and `Zonotope` | [#3979](https://github.com/JuliaReach/LazySets.jl/pull/3979) | Feature |
+| Fix `isuniversal` and constructor for `Polygon` | [#3978](https://github.com/JuliaReach/LazySets.jl/pull/3978) | Fix |
+| Preserve ID in `minkowski_sum` and `cartesian_product` between `SPZ` and `Zonotope` | [#3977](https://github.com/JuliaReach/LazySets.jl/pull/3977) | Improvement |
+| Make `overapproximate` of ASPZ with `UnionSetArray{Zonotope}` more robust | [#3972](https://github.com/JuliaReach/LazySets.jl/pull/3972) | Improvement |
+| Add overapproximation of the l1 norm of a `Zonotope` | [#3925](https://github.com/JuliaReach/LazySets.jl/pull/3925) | Feature |
+| Faster l1 norm for `AbstractZonotope` | [#3924](https://github.com/JuliaReach/LazySets.jl/pull/3924) | Improvement |
+| Add `scale` for `SPZ` | [#3908](https://github.com/JuliaReach/LazySets.jl/pull/3908) | Feature |
+| Add `merge_id` and generalize `exact_sum` for `SPZ` | [#3905](https://github.com/JuliaReach/LazySets.jl/pull/3905) | Feature |
+| Add sampler for sparse polynomial zonotopes | [#3847](https://github.com/JuliaReach/LazySets.jl/pull/3847) | Feature |
 
 ---
 
@@ -111,7 +111,7 @@ In the tables below I summarize my contributions to the different packages in th
 
 | PR Title | PR # | Notes |
 |----------|------|-------|
-| Add `parametric` systems | #332 | New feature |
+| Add `parametric` systems | [#332](https://github.com/JuliaReach/MathematicalSystems.jl/pull/332) | New feature |
 | Add HLBS25 algorithm for linear parametric systems| #XXX | New feature |
 
 ## References
