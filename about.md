@@ -4,5 +4,5 @@ title: About Me
 ---
 
 <p class="message">
-  Still waiting to do something I can brag about. I'll update it later
+  This is the about me page. You can write a little bit about yourself here.
 </p>
