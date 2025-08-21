@@ -1,16 +1,18 @@
 ---
 layout: default
-title: Home
+title: Blog
 ---
 
-<div class="post">
-  <h1 class="post-title">Welcome to my blog!</h1>
-  <p>I am just getting started. Here is my first post:</p>
-  <ul>
-    {% for post in site.posts %}
-      <li>
-        <a href="{{ post.url | absolute_url }}">{{ post.title }}</a>
-      </li>
-    {% endfor %}
-  </ul>
+<div class="posts">
+  {% for post in site.posts %}
+    <div class="post">
+      <h1 class="post-title">
+        <a href="{{ post.url | absolute_url }}">
+          {{ post.title }}
+        </a>
+      </h1>
+
+      <span class="post-date">{{ post.date | date_to_string }}</span>
+    </div>
+  {% endfor %}
 </div>
