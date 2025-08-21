@@ -1,7 +1,7 @@
 # Setup
-title:               My Blog
-tagline:             'A blog about my thoughts and experiences.'
-description:         'Welcome to my blog. Here I will share my thoughts on various topics.'
+title:               'Alessandro Carraro'
+#tagline:             'A blog about my thoughts and experiences.'
+description:         'Welcome to my blog. Here I will share my projects'
 url:                 ''
 baseurl:             ''
 paginate:            5
@@ -9,9 +9,9 @@ permalink:           pretty
 
 # About/contact
 author:
-  name:              Your Name
+  name:              Alessandro Carraro
   url:
-  email:             your-email@example.com
+  #email:             your-email@example.com
 
 # Gems
 plugins:
