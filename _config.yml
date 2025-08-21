@@ -3,7 +3,7 @@ title:               'Alessandro Carraro'
 #tagline:             'A blog about my thoughts and experiences.'
 description:         'Welcome to my blog. Here I will share my projects'
 url:                 'https://alecarraro.github.io'
-baseurl:             '/alecarraro-blog'
+#baseurl:             '/alecarraro-blog'
 paginate:            5
 permalink:           pretty
 
