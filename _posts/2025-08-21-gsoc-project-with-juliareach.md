@@ -12,14 +12,16 @@ title: GSoC 2025 Project with JuliaReach
 ## Table of Contents
 1. [Outline and Motivation](#outline-and-motivation)
 2. [Example](#Example)
-3. [Contribution Overviews](#contributions-overview)
+3. [Contributions Overview](#contributions-overview)
 4. [References](#references)
 
 ## Outline and Motivation
 
-In complex or safety-critical systems, it is often impossible to predict exactly how the system will behave due to uncertainties in initial states, inputs, or dynamics. Reachability analysis addresses this by computing *flowpipes* that enclose all possible behaviors over time, allowing engineers to rigorously verify safety, detect potential failures, and guide robust system design.  
+In many large safety-critical systems, it is often impossible to predict exactly how the system will behave due to uncertainties in initial states, inputs, or dynamics. Reachability analysis addresses this challenge by computing *flowpipes* that enclose all possible behaviors over time, allowing engineers to rigorously verify safety.
 
-In [ReachabilityAnalysis.jl](https://github.com/JuliaReach/ReachabilityAnalysis.jl), several algorithms exist to compute these enclosures for different types of dynamical systems with uncertain inputs and initial states, including hybrid systems.  
+For example, imagine an autonomous car faced with a pedestrian suddenly stepping onto the road. Depending on its exact speed, distance to the pedestrian, and reaction delay, the car may need to brake immediately or steer around the obstacle—while also accounting for sensor errors in its perception of the situation. One could try to sample a range of initial speeds and positions and simulate the resulting trajectories to guide the decision. However, because the car’s dynamics are nonlinear and the system is hybrid (involving both continuous motion and discrete decisions), even small variations in initial conditions can lead to drastically different behaviors, so simulation alone cannot provide the rigorous guarantees required for safety.
+
+In the [ReachabilityAnalysis.jl](https://github.com/JuliaReach/ReachabilityAnalysis.jl) package, several algorithms are available to compute these enclosures for different types of dynamical systems with uncertain inputs and initial states, including hybrid systems.  
 
 During my project, I focused on a fundamental class of models: linear time-invariant (LTI) systems with uncertain parameters.  
 An LTI system describes the evolution of the state vector $$x(t)$$ under a fixed matrix $$A$$:
@@ -27,7 +29,7 @@ An LTI system describes the evolution of the state vector $$x(t)$$ under a fixed
 $$x' = A x$$
 
 where $$x \in \mathbb{R}^n$$.  
-Such systems are widely used because they arise naturally when linearizing nonlinear models. In practice, however, the dynamics are rarely known exactly. Parameters in $$A$$ may be uncertain due to modeling errors, noisy identification, or faulty sensors. To capture this, we consider a parametric LTI system of the form:  
+Such systems are widely used because they arise naturally when linearizing nonlinear models. In practice, however, the dynamics are rarely known exactly. Parameters in $$A$$ may be uncertain due to modeling errors, noisy measuraments, etc.. To capture this, we consider a parametric LTI system of the form:  
 
 $$x' = A x, \quad x(0) \in X_0, \quad A \in \mathcal{A}$$
 
@@ -48,7 +50,7 @@ A classical way to represent uncertainty in $$A$$ is through an interval matrix:
 
 $$ \mathcal{A} = \{ A \mid a_{ij} \in [\underline{a}_{ij}, \overline{a}_{ij}] \} $$
 
-This representation assumes that each entry of the matrix can vary independently within its interval. While simple and convenient, this independence assumption can be overly conservative: it includes combinations of parameters that may never actually occur in practice, often resulting in loose over-approximations of the reachable set.  
+This representation assumes that each entry of the matrix can vary independently within its interval. While simple and well studied, this independence assumption can be overly conservative: it includes combinations of parameters that may never actually occur in practice, often resulting in loose over-approximations of the reachable set.  
 
 To address this, Althoff [2] introduced matrix zonotopes, which generalize standard zonotopes to matrices:
 
@@ -58,17 +60,111 @@ Here, $$A_0$$ is the center matrix, and the $$A_i$$ are generator matrices. Matr
 
 ---
 
-### Why Sparse Polynomial Zonotopes for States?  
+### Why Sparse Polynomial Zonotopes?  
 
 Once the dynamics are modeled with matrix zonotopes, the reachable states need a representation that can handle the resulting complexity without becoming overly conservative.  
 Huang et al. use aparse polynomial zonotopes for this task.
 
-SPZs extend zonotopes with polynomial terms, allowing them to capture non-convex sets while remaining closed under Minkowski sums and linear maps, the core operations in reachability analysis. Their sparse structure keeps the representation efficient and makes them a natural fit alongside matrix zonotopes.  
+SPZs extend zonotopes with polynomial terms, allowing them to capture non-convex sets while remaining closed under Minkowski sums and linear maps: two core operations in many reachability algorithms.
 
 For a more detailed description of SPZ see [3], or for a friendly introduction, see Luca’s previous GSoC [blog post](https://www.lucaferranti.com/posts/2022/09/gsoc22/)  
 
 ## Example
 
+Now let’s test the algorithm with a simple 2D dynamical system:
+
+$$
+x' = A x, \quad x(0) \in X_0, \quad 
+A = \begin{bmatrix} -1 & -5 \\ -1 & -1 \end{bmatrix}.
+$$
+
+In this case the origin is a **stable focus**, since the eigenvalues are  
+
+$$
+\lambda = -1 \pm i\sqrt{5},
+$$  
+
+so given an initial set $X_0$ the trajectories should rotate and shrink towards the origin.  
+
+We then compare two cases:  
+1. the dynamics is known exactly,  
+2. the dynamics is uncertain.  
+
+For the uncertain case, assume that the entries of $A$ lie within intervals:
+
+$$
+A \in \begin{bmatrix} [-1.1, -0.9]  & [-5.1, -4.9] \\ [-1.1, -0.9] & [-1.1, -0.9] \end{bmatrix}.
+$$
+
+This can be expressed as a matrix zonotope:
+
+$$
+\mathcal{A} = 
+\begin{bmatrix} -1 & -5 \\ -1 & -1 \end{bmatrix}
++ c \begin{bmatrix} 0.1 & 0.1 \\ 0.1 & 0.1 \end{bmatrix},
+\quad c \in [-1,1].
+$$
+
+We set up the reachability problem using **LazySets** and **ReachabilityAnalysis**:
+
+```julia
+using LazySets, ReachabilityAnalysis, 
+using IntervalMatrices # necessary import for internal calculations 
+using Plots
+
+# Nominal matrix
+A0 = [-1 -5;
+        1 -1]
+
+# Matrix zonotope with one generator
+AS = MatrixZonotope(A0, [[0.1 0.1 0.1 0.1]])
+
+# Initial set as sparse polynomial zonotope
+X0 = SparsePolynomialZonotope(
+    [1.0, 1.0],
+    0.1 * [2.0 0.0 1.0; 1.0 2.0 1.0],
+    0.1 * reshape([1.0, 0.5], 2, 1),
+    [1 0 1; 0 1 3]
+)
+
+# define the IVP
+prob1 = @ivp(x' = A * x, x(0) ∈ X0, A ∈ AS)
+
+# time step and horizon
+δ = 3 / 200
+T = 3
+
+# algorithm setup (more info below)
+alg = HLBS25(
+    δ = δ,
+    approx_model = CorrectionHullMatrixZonotope(),
+    max_order = 7,
+    taylor_order = 5,
+    reduction_method = LazySets.GIR05(),
+    recursive = false,
+)
+
+# solve
+sol1 = solve(prob1, alg; T = T)
+
+# plot
+p = plot(X0, title="Reachable Set")
+for X in sol1
+  plot!(set(X), vars=(1,2))
+end
+```
+
+<div class="message">
+  To instantiate the HLBS25 algorithm, six main parameters must be specified: the time step `δ`; the approximation model `approx_model` used to discretize the IVP; the maximum order of the SPZ, which controls the number of generators; the Taylor series orders, which determine the truncation order of the expansion of the matrix zonotope exponential; the reduction method `reduction_method`; and the `recursive` flag, which decides whether the matrix zonotope exponential is computed recursively or approximated directly. These settings allow users to balance accuracy and computational efficiency. For a full description of all options and detailed usage instructions, please refer to the documentation.
+</div>
+
+
+To compare with the exact dynamics, we can repeat the experiment using a matrix zonotope with no generators (or equivalently, a fixed matrix $$A$$).
+
+
+
+### What is going wrong?
+I understand
 ## Contributions Overview
 In the tables below I summarize my contributions to the different packages in the `JuliaReach` ecosystem to implement the reachability algorithm described above.
 
@@ -112,7 +208,7 @@ In the tables below I summarize my contributions to the different packages in th
 | PR Title | PR # | Notes |
 |----------|------|-------|
 | Add `parametric` systems | [#332](https://github.com/JuliaReach/MathematicalSystems.jl/pull/332) | New feature |
-| Add HLBS25 algorithm for linear parametric systems| #XXX | New feature |
+| Add HLBS25 algorithm for linear parametric systems| #XXX | New feature | [#931](https://github.com/JuliaReach/ReachabilityAnalysis.jl/pull/931)
 
 ## References
 [1] Yushen Huang, Ertai Luo, Stanley Bak, Yifan Sun, *Reachability analysis for linear systems with uncertain parameters using polynomial zonotopes*, Nonlinear Analysis: Hybrid Systems, Volume 56, 2025, 101571, ISSN 1751-570X. [DOI](https://doi.org/10.1016/j.nahs.2024.101571)
