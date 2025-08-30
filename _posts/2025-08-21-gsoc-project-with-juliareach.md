@@ -78,22 +78,22 @@ x' = A x, \quad x(0) \in X_0, \quad
 A = \begin{bmatrix} -1 & -5 \\ -1 & -1 \end{bmatrix}.
 $$
 
-In this case the origin is a **stable focus**, since the eigenvalues are  
+In this case the origin is a *stable focus*, since the eigenvalues are  
 
 $$
 \lambda = -1 \pm i\sqrt{5},
 $$  
 
-so given an initial set $X_0$ the trajectories should rotate and shrink towards the origin.  
+so given an initial set $$X_0$$ the trajectories should rotate and shrink towards the origin.  
 
 We then compare two cases:  
 1. the dynamics is known exactly,  
 2. the dynamics is uncertain.  
 
-For the uncertain case, assume that the entries of $A$ lie within intervals:
+For the uncertain case, assume that the we are unsure about one of the entries of $A$:
 
 $$
-A \in \begin{bmatrix} [-1.1, -0.9]  & [-5.1, -4.9] \\ [-1.1, -0.9] & [-1.1, -0.9] \end{bmatrix}.
+A \in \begin{bmatrix} [-1.1, -0.9]  & -5 \\ 1 & -1 \end{bmatrix}.
 $$
 
 This can be expressed as a matrix zonotope:
@@ -101,70 +101,142 @@ This can be expressed as a matrix zonotope:
 $$
 \mathcal{A} = 
 \begin{bmatrix} -1 & -5 \\ -1 & -1 \end{bmatrix}
-+ c \begin{bmatrix} 0.1 & 0.1 \\ 0.1 & 0.1 \end{bmatrix},
++ c \begin{bmatrix} 0.1 & 0 \\ 0 & 0 \end{bmatrix},
 \quad c \in [-1,1].
 $$
 
-We set up the reachability problem using **LazySets** and **ReachabilityAnalysis**:
+Now we will set up the reachability problem using `LazySets` and `ReachabilityAnalysis`:
+
+### Step 1: Import the packages
 
 ```julia
-using LazySets, ReachabilityAnalysis, 
-using IntervalMatrices # necessary import for internal calculations 
+using LazySets, ReachabilityAnalysis
+using IntervalMatrices   # required for internal calculations
 using Plots
+````
 
+### Step 2: Define the system matrices
+
+```julia
 # Nominal matrix
 A0 = [-1 -5;
-        1 -1]
+       1 -1]
 
 # Matrix zonotope with one generator
-AS = MatrixZonotope(A0, [[0.1 0.1 0.1 0.1]])
+AS = MatrixZonotope(A0, [[0.1 0.0; 0.0 0.0]])
+```
 
-# Initial set as sparse polynomial zonotope
+### Step 3: Define the initial set
+
+We initialize the initial conditions as a sparse polynomial zonotope:
+
+```julia
 X0 = SparsePolynomialZonotope(
     [1.0, 1.0],
     0.1 * [2.0 0.0 1.0; 1.0 2.0 1.0],
     0.1 * reshape([1.0, 0.5], 2, 1),
     [1 0 1; 0 1 3]
 )
+```
 
-# define the IVP
+### Step 4: Define the IVP
+We can use the convenient macro `@ivp` to specify the initial states and uncertain dynamics:
+
+```julia
 prob1 = @ivp(x' = A * x, x(0) ∈ X0, A ∈ AS)
+```
 
-# time step and horizon
+### Step 5: Configure the reachability algorithm
+
+We use the `HLBS25` algorithm for systems with uncertain parameters:
+
+```julia
+# Time step and horizon
 δ = 3 / 200
 T = 3
 
-# algorithm setup (more info below)
+# Algorithm setup
 alg = HLBS25(
     δ = δ,
     approx_model = CorrectionHullMatrixZonotope(),
-    max_order = 7,
+    max_order = 5,
     taylor_order = 5,
     reduction_method = LazySets.GIR05(),
     recursive = false,
 )
+```
 
-# solve
+<div class="message">
+  <p><strong>Main parameters of <code>HLBS25</code>:</strong></p>
+  <ul>
+    <li><strong>δ</strong> – time step</li>
+    <li><strong>approx_model</strong> – discretization model (default: <code>CorrectionHullMatrixZonotope</code>)</li>
+    <li><strong>max_order</strong> – maximum order of the SPZ (trade-off between accuracy and complexity)</li>
+    <li><strong>taylor_order</strong> – truncation order of the Taylor expansion of the exponential</li>
+    <li><strong>reduction_method</strong> – strategy to reduce the complexity of matrix zonotopes</li>
+    <li><strong>recursive</strong> – whether to compute the exponential recursively or directly</li>
+  </ul>
+  <p>
+    For a full description of these options, refer to the
+    <a href="https://github.com/JuliaReach/ReachabilityAnalysis.jl">documentation</a>.
+  </p>
+</div>
+
+
+### Step 6: Solve and visualize
+
+```julia
+# Solve
 sol1 = solve(prob1, alg; T = T)
 
-# plot
+# Plot
 p = plot(X0, title="Reachable Set")
 for X in sol1
   plot!(set(X), vars=(1,2))
 end
 ```
 
-<div class="message">
-  To instantiate the HLBS25 algorithm, six main parameters must be specified: the time step `δ`; the approximation model `approx_model` used to discretize the IVP; the maximum order of the SPZ, which controls the number of generators; the Taylor series orders, which determine the truncation order of the expansion of the matrix zonotope exponential; the reduction method `reduction_method`; and the `recursive` flag, which decides whether the matrix zonotope exponential is computed recursively or approximated directly. These settings allow users to balance accuracy and computational efficiency. For a full description of all options and detailed usage instructions, please refer to the documentation.
-</div>
+This produces the flowpipe, showing how trajectories evolve while accounting for both the initial uncertainty and the uncertainty in the dynamics.
 
+To compare with the exact case, we can repeat the experiment with a matrix zonotope that has no generators, which corresponds to a fixed matrix $$A$$.
 
-To compare with the exact dynamics, we can repeat the experiment using a matrix zonotope with no generators (or equivalently, a fixed matrix $$A$$).
+<figure>
+  <img src="{{ '/assets/images/HLBS25.png' | relative_url }}" alt="Reachability plot" width="500">
+  <figcaption>Figure 1: Reachable set over time for exact and uncertain dynamics. Every third reachset is plotted.</figcaption>
+</figure>
 
+---
 
+## A not so succesful example
+If we choose a matrix zonotope with large uncertainty such as:
+
+$$
+\mathcal{A} = 
+\begin{bmatrix} -1 & -5 \\ -1 & -1 \end{bmatrix}
++ c \begin{bmatrix} 0.01 & 0.01 \\ 0.1 & 0.1 \end{bmatrix},
+\quad c \in [-1,1].
+$$
+
+The results look quite bad:
+
+<figure>
+  <img src="{{ '/assets/images/all_gens_comp.png' | relative_url }}" alt="Reachability plot" width="500">
+  <figcaption>Figure 2: Reachable set over time for exact and uncertain dynamics. Every third reachset is plot</figcaption>
+</figure>
+
+In this case the reach sets quickly bloat, eventually growing faster than they contract around the fixed point, a very strange behavior. For small uncertainty the algorithm behaves well, but with larger uncertainty the over-approximation deteriorates. Interestingly, increasing the maximum order parameter seems to mitigate the bloating somewhat.
 
 ### What is going wrong?
-I understand
+Together with my mentors, I’ve been investigating this issue for several weeks. The problem appears to stem from the repeated use of the `reduce_order` method. Keeping it brief, in the algorithm we compute end apply at each step the matrix zonotope exponential $$e^{\mathcal{A}}$$ to propagate the state set forward in time. This increases the number of generators in the SPZ, forcing order reduction to keep the complexity manageable. However, repeated reduction seems to discard generators that capture important information, while the remaining ones grow excessively under successive exponentials.
+
+This is puzzling, since `reduce_order` works well in other parts of the library. It’s unclear whether this instability reflects a deeper stability issue, perhaps some relationship between the amount of uncertainty and the step size, similar to time-stepping constraints in ODE solvers, or whether it comes from a subtle bug in the implementation (such as how reduction is applied). What is certain is that the issue seems specific to this algorithm, which is still very new and, before our work, had only been implemented in a single library
+
+
+### What's next?
+After the end of the GSOC, we made a plan to further investigate the problem and finally turn the algorithm in a stable release. Initially I was on track to implement the non-homohenous algorithm as well, but due to the issue, this is postponed for the next few weeks
+
+---
+
 ## Contributions Overview
 In the tables below I summarize my contributions to the different packages in the `JuliaReach` ecosystem to implement the reachability algorithm described above.
 
