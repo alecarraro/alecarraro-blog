@@ -216,7 +216,7 @@ For small uncertainty the algorithm behaves well, but with larger uncertainty th
 $$
 \mathcal{A} = 
 \begin{bmatrix} -1 & -5 \\ -1 & -1 \end{bmatrix}
-+ c \begin{bmatrix} 0.01 & 0.01 \\ 0.1 & 0.1 \end{bmatrix},
++ c \begin{bmatrix} 0.1 & 0.1 \\ 0.1 & 0.1 \end{bmatrix},
 \quad c \in [-1,1].
 $$
 
