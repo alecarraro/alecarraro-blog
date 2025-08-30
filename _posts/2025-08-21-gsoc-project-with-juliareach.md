@@ -4,7 +4,9 @@ title: GSoC 2025 Project with JuliaReach
 ---
 
 <div class="message">
-  Hey! This post summarizes my GSoC 2025 work with the JuliaReach organization on ReachabilityAnalysis.jl under the guidance of mentors 
+  Hey! This post summarizes my GSoC 2025 work with the 
+  <a href="https://juliareach.github.io/">JuliaReach </a>
+  organization on ReachabilityAnalysis.jl under the guidance of mentors 
   <a href="https://github.com/schillic">Christian Schilling</a> and 
   <a href="https://github.com/mforets">Marcelo Forets</a>.
 </div>
@@ -14,12 +16,13 @@ title: GSoC 2025 Project with JuliaReach
 2. [Example](#Example)
 3. [Contributions Overview](#contributions-overview)
 4. [References](#references)
+5. [Appendifx](#appendix)
 
 ## Outline and Motivation
 
-In many large safety-critical systems, it is often impossible to predict exactly how the system will behave due to uncertainties in initial states, inputs, or dynamics. Reachability analysis addresses this challenge by computing *flowpipes* that enclose all possible behaviors over time, allowing engineers to rigorously verify safety.
+In many safety-critical systems, it is often impossible to predict exactly how the system will behave due to uncertainties in initial states, inputs, or dynamics. Reachability analysis addresses this challenge by computing *flowpipes* that enclose all possible behaviors over time, allowing engineers to rigorously verify safety.
 
-For example, imagine an autonomous car faced with a pedestrian suddenly stepping onto the road. Depending on its exact speed, distance to the pedestrian, and reaction delay, the car may need to brake immediately or steer around the obstacle—while also accounting for sensor errors in its perception of the situation. One could try to sample a range of initial speeds and positions and simulate the resulting trajectories to guide the decision. However, because the car’s dynamics are nonlinear and the system is hybrid (involving both continuous motion and discrete decisions), even small variations in initial conditions can lead to drastically different behaviors, so simulation alone cannot provide the rigorous guarantees required for safety.
+For example, imagine an autonomous car faced with a pedestrian suddenly stepping onto the road. Depending on its exact speed, distance to the pedestrian, and reaction delay, the car may need to brake immediately or steer around the obstacle, while also accounting for sensor errors. One could try to sample a range of initial speeds and positions and simulate the resulting trajectories to guide the decision. However, because the car’s dynamics is nonlinear even small variations in initial conditions can lead to drastically different behaviors, so simulation alone cannot provide the rigorous guarantees required for safety.
 
 In the [ReachabilityAnalysis.jl](https://github.com/JuliaReach/ReachabilityAnalysis.jl) package, several algorithms are available to compute these enclosures for different types of dynamical systems with uncertain inputs and initial states, including hybrid systems.  
 
@@ -29,7 +32,7 @@ An LTI system describes the evolution of the state vector $$x(t)$$ under a fixed
 $$x' = A x$$
 
 where $$x \in \mathbb{R}^n$$.  
-Such systems are widely used because they arise naturally when linearizing nonlinear models. In practice, however, the dynamics are rarely known exactly. Parameters in $$A$$ may be uncertain due to modeling errors, noisy measuraments, etc.. To capture this, we consider a parametric LTI system of the form:  
+Such systems are widely used because they arise naturally when linearizing nonlinear models. In practice, however, the dynamics are rarely known exactly. Parameters in $$A$$ may be uncertain due to modeling errors, noisy measurements, etc.. To capture this, we consider a parametric LTI system of the form:  
 
 $$x' = A x, \quad x(0) \in X_0, \quad A \in \mathcal{A}$$
 
@@ -63,7 +66,7 @@ Here, $$A_0$$ is the center matrix, and the $$A_i$$ are generator matrices. Matr
 ### Why Sparse Polynomial Zonotopes?  
 
 Once the dynamics are modeled with matrix zonotopes, the reachable states need a representation that can handle the resulting complexity without becoming overly conservative.  
-Huang et al. use aparse polynomial zonotopes for this task.
+Huang et al. use sparse polynomial zonotopes for this task.
 
 SPZs extend zonotopes with polynomial terms, allowing them to capture non-convex sets while remaining closed under Minkowski sums and linear maps: two core operations in many reachability algorithms.
 
@@ -90,7 +93,7 @@ We then compare two cases:
 1. the dynamics is known exactly,  
 2. the dynamics is uncertain.  
 
-For the uncertain case, assume that the we are unsure about one of the entries of $A$:
+For the uncertain case, assume that the we are unsure about one of the entries of $$A$$:
 
 $$
 A \in \begin{bmatrix} [-1.1, -0.9]  & -5 \\ 1 & -1 \end{bmatrix}.
@@ -110,20 +113,20 @@ Now we will set up the reachability problem using `LazySets` and `ReachabilityAn
 ### Step 1: Import the packages
 
 ```julia
-using LazySets, ReachabilityAnalysis
-using IntervalMatrices   # required for internal calculations
+using ReachabilityAnalysis
+import IntervalMatrices   # required for internal calculations
 using Plots
-````
+```
 
 ### Step 2: Define the system matrices
 
 ```julia
 # Nominal matrix
-A0 = [-1 -5;
-       1 -1]
+A0 = [-1.0 -5.0;
+       1.0 -1.0]
 
 # Matrix zonotope with one generator
-AS = MatrixZonotope(A0, [[0.1 0.0; 0.0 0.0]])
+AS = MatrixZonotope(A0, [N[0.1 0.0; 0.0 0.0]])
 ```
 
 ### Step 3: Define the initial set
@@ -132,10 +135,10 @@ We initialize the initial conditions as a sparse polynomial zonotope:
 
 ```julia
 X0 = SparsePolynomialZonotope(
-    [1.0, 1.0],
-    0.1 * [2.0 0.0 1.0; 1.0 2.0 1.0],
-    0.1 * reshape([1.0, 0.5], 2, 1),
-    [1 0 1; 0 1 3]
+    [1.0, 1.0], # center 
+    0.1 * [2.0 0.0 1.0; 1.0 2.0 1.0], # independent generators
+    0.1 * reshape([1.0, 0.5], 2, 1), # dependent generators
+    [1 0 1; 0 1 3] # exponent
 )
 ```
 
@@ -153,7 +156,7 @@ We use the `HLBS25` algorithm for systems with uncertain parameters:
 ```julia
 # Time step and horizon
 δ = 3 / 200
-T = 3
+T = 3.0
 
 # Algorithm setup
 alg = HLBS25(
@@ -198,17 +201,17 @@ end
 
 This produces the flowpipe, showing how trajectories evolve while accounting for both the initial uncertainty and the uncertainty in the dynamics.
 
-To compare with the exact case, we can repeat the experiment with a matrix zonotope that has no generators, which corresponds to a fixed matrix $$A$$.
+To compare with the exact case, we can repeat the experiment with a matrix zonotope that has no generators, which corresponds to a fixed matrix $$A$$. The fully worked out code can be found at the end of this page in the Appendix
 
 <figure>
   <img src="{{ '/assets/images/HLBS25.png' | relative_url }}" alt="Reachability plot" width="500">
-  <figcaption>Figure 1: Reachable set over time for exact and uncertain dynamics. Every third reachset is plotted.</figcaption>
+  <figcaption>Figure 1: Reachable set over time for exact and uncertain dynamics. Every third reach set is plotted.</figcaption>
 </figure>
 
 ---
 
 ## A not so succesful example
-If we choose a matrix zonotope with large uncertainty such as:
+For small uncertainty the algorithm behaves well, but with larger uncertainty the over-approximation deteriorates. For example, if we choose a matrix zonotope with large uncertainty such as:
 
 $$
 \mathcal{A} = 
@@ -221,19 +224,20 @@ The results look quite bad:
 
 <figure>
   <img src="{{ '/assets/images/all_gens_comp.png' | relative_url }}" alt="Reachability plot" width="500">
-  <figcaption>Figure 2: Reachable set over time for exact and uncertain dynamics. Every third reachset is plot</figcaption>
+  <figcaption>Figure 2: Reachable set over time for exact and uncertain dynamics. Every third reach set is plot</figcaption>
 </figure>
 
-In this case the reach sets quickly bloat, eventually growing faster than they contract around the fixed point, a very strange behavior. For small uncertainty the algorithm behaves well, but with larger uncertainty the over-approximation deteriorates. Interestingly, increasing the maximum order parameter seems to mitigate the bloating somewhat.
+In this case we observe a very strange behaviour: the reach sets quickly bloat growing faster than they contract around the fixed poin. Interestingly, increasing the maximum order parameter seems to mitigate the bloating somewhat.
 
 ### What is going wrong?
 Together with my mentors, I’ve been investigating this issue for several weeks. The problem appears to stem from the repeated use of the `reduce_order` method. Keeping it brief, in the algorithm we compute end apply at each step the matrix zonotope exponential $$e^{\mathcal{A}}$$ to propagate the state set forward in time. This increases the number of generators in the SPZ, forcing order reduction to keep the complexity manageable. However, repeated reduction seems to discard generators that capture important information, while the remaining ones grow excessively under successive exponentials.
 
-This is puzzling, since `reduce_order` works well in other parts of the library. It’s unclear whether this instability reflects a deeper stability issue, perhaps some relationship between the amount of uncertainty and the step size, similar to time-stepping constraints in ODE solvers, or whether it comes from a subtle bug in the implementation (such as how reduction is applied). What is certain is that the issue seems specific to this algorithm, which is still very new and, before our work, had only been implemented in a single library
+However this is quite puzzling, since `reduce_order` works well in other parts of the library. At this point it is still unclear to us whether this instability reflects a deeper stability issue, perhaps some relationship between the amount of uncertainty and the step size, similar to time-stepping constraints in ODE solvers, or whether it comes from a subtle bug in the implementation of one of the many building blocks. What is certain is that the issue seems specific to this algorithm, which is still very new and, before our work, had only been implemented in the library [CORA](https://tumcps.github.io/CORA/)
 
 
 ### What's next?
-After the end of the GSOC, we made a plan to further investigate the problem and finally turn the algorithm in a stable release. Initially I was on track to implement the non-homohenous algorithm as well, but due to the issue, this is postponed for the next few weeks
+After the end of the GSOC, we made a plan to further investigate the problem and finally turn the algorithm in a stable release. 
+I have also implemented the non-homogeneous case $$x' = \mathcal{A}x + \mathcal{B}u$$, however it is not ready for a release yet since there are some implementation details which require further discussion with the mentors.
 
 ---
 
@@ -279,8 +283,8 @@ In the tables below I summarize my contributions to the different packages in th
 
 | PR Title | PR # | Notes |
 |----------|------|-------|
-| Add `parametric` systems | [#332](https://github.com/JuliaReach/MathematicalSystems.jl/pull/332) | New feature |
-| Add HLBS25 algorithm for linear parametric systems| #XXX | New feature | [#931](https://github.com/JuliaReach/ReachabilityAnalysis.jl/pull/931)
+| Add `parametric` systems | [#332](https://github.com/JuliaReach/MathematicalSystems.jl/pull/332) | Feature |
+| Add HLBS25 algorithm for linear parametric systems|[#931](https://github.com/JuliaReach/ReachabilityAnalysis.jl/pull/931) | Feature 
 
 ## References
 [1] Yushen Huang, Ertai Luo, Stanley Bak, Yifan Sun, *Reachability analysis for linear systems with uncertain parameters using polynomial zonotopes*, Nonlinear Analysis: Hybrid Systems, Volume 56, 2025, 101571, ISSN 1751-570X. [DOI](https://doi.org/10.1016/j.nahs.2024.101571)
@@ -288,3 +292,75 @@ In the tables below I summarize my contributions to the different packages in th
 [2] Matthias Althoff, *Reachability Analysis and its Application to the Safety Assessment of Autonomous Cars*, PhD thesis, Technische Universität München, July 2010.
 
 [3] Niklas Kochdumper, Matthias Althoff, *Sparse Polynomial Zonotopes: A Novel Set Representation for Reachability Analysis*, IEEE Transactions on Automatic Control, Vol. 66, No. 9, Sept. 2021, pp. 4043–4058. [DOI](https://doi.org/10.1109/TAC.2020.3024348)
+
+## Appendix 
+```julia
+using ReachabilityAnalysis
+import IntervalMatrices
+using Plots
+N = Float64
+
+A0 = N[-1 -5;
+        1 -1]
+AS = MatrixZonotope(A0, [zeros(2,2)]) 
+
+# Initial set
+X0 = SparsePolynomialZonotope(
+    N[1.0, 1.0],
+    N(0.1) * N[2.0 0.0 1.0; 1.0 2.0 1.0],
+    N(0.1) * reshape(N[1.0, 0.5], 2, 1),
+    [1 0 1; 0 1 3]
+)
+
+# Two problems: no variation vs. small generator variation
+prob1 = @ivp(x' = A * x, x(0) ∈ X0, A ∈ AS)
+
+AS = MatrixZonotope(A0, [N[0.1 0.1; 0.1 0.1]])
+prob2 = @ivp(x' = A * x, x(0) ∈ X0, A ∈ AS)
+
+δ = N(3) / 200
+T = 3.0
+
+alg = HLBS25(
+    δ = δ,
+    approx_model = CorrectionHullMatrixZonotope(),
+    max_order = 5,
+    taylor_order = 5,
+    reduction_method = LazySets.GIR05(),
+    recursive = false,
+)
+
+sol1 = solve(prob1, alg; T = T)
+sol2 = solve(prob2, alg; T = T)
+
+# plotting function
+function plot_flowpipe(sets, X0; kwargs...)
+    p = plot(; kwargs...)
+    for (i,s) in enumerate(sets)
+        if i%3 ==0
+            plot!(p, set(s); vars=(1,2), alpha=0.3, lw=0.5)
+        end
+    end
+    return p
+end
+
+p1 = plot_flowpipe(sol1, X0,
+    title = "Flowpipe: exact A",
+    xlabel = "x₁", ylabel = "x₂",
+    legend = true)
+
+p2 = plot_flowpipe(sol2, X0, 
+    title = "Flowpipe: uncertain A ",
+    xlabel = "x₁", ylabel = "x₂",
+    legend = true)
+
+# common limits for better comparison
+xlims_common = (min(xlims(p1)..., xlims(p2)...), max(xlims(p1)..., xlims(p2)...))
+ylims_common = (min(ylims(p1)..., ylims(p2)...), max(ylims(p1)..., ylims(p2)...))
+plot!(p1; xlims=xlims_common, ylims=ylims_common)
+plot!(p2; xlims=xlims_common, ylims=ylims_common)
+
+plot(p1, p2, layout=(1, 2), size=(1000, 420))
+savefig("reach_comp.png")
+
+```
