@@ -1,6 +1,7 @@
 ---
 layout: post
 title: GSoC 2025 Project with JuliaReach
+image: /assets/images/gsoc_blog_cover.png
 ---
 
 <div class="message">
