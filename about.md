@@ -76,7 +76,7 @@ title: About Me
       </li>
       <li>
         <!-- LinkedIn icon SVG -->
-        <a href="https://linkedin.com/in/alessandro-carraro" target="_blank" title="LinkedIn">
+        <a href="https://www.linkedin.com/in/alessandro-carraro-162761387/" target="_blank" title="LinkedIn">
           <svg viewBox="0 0 24 24"><path d="M4.98 3.5a2.5 2.5 0 1 1-.001 5.001A2.5 2.5 0 0 1 4.98 3.5zM3 9h4v12H3V9zm7 0h3.6v1.7h.05c.5-.9 1.7-1.8 3.45-1.8 3.7 0 4.4 2.4 4.4 5.5V21h-4v-5.5c0-1.3-.03-3-1.85-3-1.85 0-2.14 1.5-2.14 2.9V21h-4V9z"/></svg>
         </a>
         Alessandro Carraro
