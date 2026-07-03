@@ -5,30 +5,34 @@ title: About Me
 
 <style>
   .about-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
+    display: grid;
+    grid-template-columns: minmax(250px, 300px) minmax(0, 1fr);
+    gap: 2.5rem;
     align-items: flex-start;
   }
 
   .about-left {
-    flex: 1 1 250px;
-    max-width: 250px;
+    padding: 1.25rem;
+    border: 1px solid #e7e1d8;
+    border-radius: 8px;
+    background: #fffdfa;
   }
 
   .about-left img {
-    width: 150px;
-    height: 150px;
+    width: 144px;
+    height: 144px;
     border-radius: 50%;
     object-fit: cover;
     margin-bottom: 1rem;
+    border: 3px solid #fff;
+    box-shadow: 0 6px 18px rgba(40, 37, 34, .12);
   }
 
   .profile-info {
     list-style: none;
     padding: 0;
     font-size: 0.95rem;
-    color: #333;
+    color: #4c4742;
   }
 
   .profile-info li {
@@ -36,35 +40,74 @@ title: About Me
     align-items: center;
     gap: 0.5rem;
     margin-bottom: 0.5rem;
+    min-width: 0;
   }
 
   .profile-info svg {
+    flex: 0 0 auto;
     width: 20px;
     height: 20px;
     fill: currentColor;
   }
 
-  .about-right {
-    flex: 2 1 400px;
-    min-width: 300px;
+  .profile-info a {
+    flex: 0 0 auto;
   }
 
-  .message {
-    line-height: 1.6;
-    margin-bottom: 1rem; /* space between paragraphs */
+  .about-title {
+    margin-top: 0;
+    margin-bottom: .35rem;
   }
 
-  .resume-link {
-    display: inline-block;
-    margin-top: 1rem;
-    font-weight: bold;
+  .about-kicker {
+    margin-bottom: 1rem;
+    color: #7a7168;
+    font-family: "PT Sans", Helvetica, Arial, sans-serif;
+    font-size: .9rem;
+    letter-spacing: .02em;
+    text-transform: uppercase;
   }
+
+  .about-copy {
+    line-height: 1.7;
+  }
+
+  .focus-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+    margin-top: 1.25rem;
+  }
+
+  .focus-item {
+    padding: .85rem;
+    border: 1px solid #e7e1d8;
+    border-radius: 8px;
+    background: #fffdfa;
+    font-family: "PT Sans", Helvetica, Arial, sans-serif;
+    font-size: .88rem;
+    color: #514b45;
+  }
+
+  .focus-item strong {
+    display: block;
+    margin-bottom: .15rem;
+    color: #2f2b28;
+  }
+
+  @media (max-width: 38em) {
+    .about-container,
+    .focus-list {
+      grid-template-columns: 1fr;
+    }
+  }
+
 </style>
 
 <div class="about-container">
   <div class="about-left">
     <!-- Profile picture -->
-    <img src="{{ '/assets/images/profile.jpg' | relative_url }}" alt="Alessandro Carraro">
+    <img src="{{ '/assets/images/profile/profile.png' | relative_url }}" alt="Alessandro Carraro">
 
     <!-- Profile info -->
     <ul class="profile-info">
@@ -87,18 +130,31 @@ title: About Me
     </ul>
   </div>
 
-  <div class="about-right">
-    <p class="message">
-      Hi, I’m Alessandro Carraro. I am a 2nd-year Master’s student at KTH and TU Delft, enrolled in the joint programme Computer Simulation for Science and Engineering (COSSE).
+  <div class="about-right about-copy">
+    <p class="about-kicker">Computational mathematics, HPC, and scientific software</p>
+    <h2 class="about-title">Hi, I am Alessandro.</h2>
 
-      As a part of my education, I have followed courses on numerical methods, scientific and graph machine learning, and control theory.
-  
-      In my free time, I contribute to the <a href="https://juliareach.github.io/">JuliaReach</a> ecosystem, an open-source framework specialized in reachability analysis for dynamical systems.
+    <p>
+      I completed a master's degree in Computational Mathematics through the COSSE programme at TU Delft and KTH. I will soon start a PhD at the University of Edinburgh, working on structured linear algebra for efficient representation learning.
     </p>
 
-    <p class="resume-link">
-      📄 You can view my resume here:  
-      <a href="{{ '/assets/pdfs/resume_2025_website.pdf' | relative_url }}" target="_blank">PDF</a>
+    <p>
+      My interests sit at the intersection of high-performance linear algebra, GPU programming, and numerical software. I mostly work in C++ and Julia, and I enjoy turning mathematical structure into implementations that are both fast and understandable.
     </p>
+
+    <p>
+      I contribute to open-source scientific computing projects, including work on <a href="https://github.com/NextLinearAlgebra/NextLA.jl">NextLA.jl</a> and previous contributions to the <a href="https://juliareach.github.io/">JuliaReach</a> ecosystem for reachability analysis of dynamical systems.
+    </p>
+
+    <div class="focus-list">
+      <div class="focus-item">
+        <strong>Research</strong>
+        Low-rank approximations, mixed precision, and parallel Jacobi methods.
+      </div>
+      <div class="focus-item">
+        <strong>Software</strong>
+        CUDA programming, high-performance linear algebra, Julia, and C++.
+      </div>
+    </div>
   </div>
 </div>

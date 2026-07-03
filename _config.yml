@@ -3,7 +3,7 @@ title:               Alessandro Carraro
 #tagline:             'A blog about my thoughts and experiences.'
 description:         'Welcome to my blog. Here I will share details about my projects'
 url:                 'https://alecarraro.github.io'
-baseurl:             '/alecarraro-blog'
+baseurl:             ''
 paginate:            5
 permalink:           pretty
 
@@ -17,6 +17,7 @@ author:
 plugins:
   - jekyll-paginate
   - jekyll-github-metadata
+  - jekyll-redirect-from
 
 # Custom vars
 version:             1.1.0

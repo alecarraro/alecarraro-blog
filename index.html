@@ -4,28 +4,30 @@ title: Blog
 ---
 
 <section class="blog">
-  <h1>Blog</h1>
+  <h1>Notes</h1>
 
   {% assign posts_by_year = site.posts | group_by_exp:"post", "post.date | date: '%Y'" %}
   {% for year in posts_by_year %}
     <h2>{{ year.name }}</h2>
 
-    {% for post in year.items %}
-      <div class="post-preview" style="display: flex; align-items: center; margin-bottom: 2rem;">
-        <div style="flex: 1;">
+    <div class="post-list">
+      {% for post in year.items %}
+      <article class="post-preview">
+        <div class="post-preview-body">
           <h3>
             <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
           </h3>
-          <p style="color: gray; font-size: 0.9em;">
+          <p class="post-preview-date">
             Published on {{ post.date | date: "%b %d, %Y" }}.
           </p>
         </div>
         {% if post.image %}
-          <div style="flex: 0 0 150px; margin-left: 1rem;">
-            <img src="{{ post.image | relative_url }}" alt="Post image" style="max-width: 100%; border-radius: 8px;">
+          <div class="post-preview-image">
+            <img src="{{ post.image | relative_url }}" alt="Post image">
           </div>
         {% endif %}
-      </div>
-    {% endfor %}
+      </article>
+      {% endfor %}
+    </div>
   {% endfor %}
 </section>

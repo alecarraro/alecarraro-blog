@@ -1,7 +1,8 @@
 ---
 layout: post
 title: Hub laplacian operators for directional Graph Neural Networks
-image: /assets/images/cover_gnn.png
+image: /assets/images/hub-laplacian/cover.png
+published: false
 ---
 
 <div class="message">

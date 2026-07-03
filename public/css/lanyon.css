@@ -73,16 +73,16 @@ h1, h2, h3, h4, h5, h6 {
  */
 
 .container {
-  max-width: 28rem;
+  max-width: 30rem;
 }
 @media (min-width: 38em) {
   .container {
-    max-width: 32rem;
+    max-width: 42rem;
   }
 }
 @media (min-width: 56em) {
   .container {
-    max-width: 38rem;
+    max-width: 54rem;
   }
 }
 
@@ -96,21 +96,22 @@ h1, h2, h3, h4, h5, h6 {
 .masthead {
   padding-top:    1rem;
   padding-bottom: 1rem;
-  margin-bottom: 3rem;
-  border-bottom: 1px solid #eee;
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid #e7e1d8;
+  background: rgba(251,250,247,.92);
 }
 .masthead-title {
   margin-top: 0;
   margin-bottom: 0;
-  color: #505050;
+  color: #2f2b28;
 }
 .masthead-title a {
-  color: #505050;
+  color: #2f2b28;
 }
 .masthead-title small {
   font-size: 75%;
   font-weight: 400;
-  color: #c0c0c0;
+  color: #8b8177;
   letter-spacing: 0;
 }
 
@@ -151,7 +152,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: "PT Sans", Helvetica, Arial, sans-serif;
   font-size: .875rem; /* 15px */
   color: rgba(255,255,255,.6);
-  background-color: #202020;
+  background-color: #292522;
   -webkit-transition: all .3s ease-in-out;
           transition: all .3s ease-in-out;
 }
