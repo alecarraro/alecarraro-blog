@@ -6,7 +6,8 @@ title: Blog
 <section class="blog">
   <h1>Notes</h1>
 
-  {% assign posts_by_year = site.posts | group_by_exp:"post", "post.date | date: '%Y'" %}
+  {% assign visible_posts = site.posts | where_exp:"post", "post.hidden != true" %}
+  {% assign posts_by_year = visible_posts | group_by_exp:"post", "post.date | date: '%Y'" %}
   {% for year in posts_by_year %}
     <h2>{{ year.name }}</h2>
 

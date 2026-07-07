@@ -1,21 +1,24 @@
 ---
 layout: post
 title: TLR Matrix Multiplication
+hidden: true
 ---
 
 ## Table of Contents
 1. [Introduction: TLR `GEMM`](#introduction-tlr-gemm)
-2. [Fixed Rank `GEMM`: dense ← TLR × TLR](#fixed-rank-gemm--mathrm-dense-leftarrow-mathrmtlrtimes-mathrmtlr)
-   1. [Uniform TLR `GEMM`](#uniform-tlr-gemm)
+2. [Fixed Rank `GEMM`: dense ← TLR × TLR](#fixed-rank-dense-tlr-tlr)
+   1. [Regular TLR `GEMM`](#regular-tlr-gemm)
       1. [The easy terms](#the-easy-terms)
-      2. [The hard term $$O_A O_B$$](#the-hard-term-o_a-o_b)
-         2. [The stride-1 axis](#the-stride-1-axis)
-         3. [Lever 1: $$A$$'s axis fixes how the $$k$$-reduction is done](#lever-1--as-axis-fixes-how-the-k-reduction-is-done)
-         4. [Lever 2: $$B$$'s axis fixes whether Stage 1 fuses $$j$$](#lever-2--bs-axis-fixes-whether-stage-1-fuses-j)
-         5. [Workspace and runs](#workspace-and-runs)
-         6. [Pseudocode](#pseudocode)
+      2. [The $$O_A O_B$$ terms](#oa-ob-terms)
+         1. [The stride-1 axis](#the-stride-1-axis)
+         2. [Lever 1: $$A$$'s layout determines how the $$k$$-sum is performed](#lever-1-a-layout-k-sum)
+         3. [Lever 2: $$B$$'s layout determines whether Stage 1 fuses over $$j$$](#lever-2-b-layout-stage-1)
+         4. [Output traversal and workspace budget](#output-traversal-workspace-budget)
+         5. [Pseudocode](#pseudocode)
+         6. [Benchmark](#benchmark)
 
 ## Introduction: TLR `GEMM`
+{: #introduction-tlr-gemm }
 
 Let $$A \in \mathbb{R}^{N \times N}$$ be a square matrix stored in tile low-rank (TLR) format. We  partition $$A$$ into an $$n \times n$$ grid of tiles,
 
@@ -56,6 +59,7 @@ $$
 This post describes stage 1, the fixed-rank dense-output case; the TLR-output cases extend it.
 
 ## Fixed Rank `GEMM`:  $$\mathrm{ dense} \leftarrow \mathrm{TLR}\times \mathrm{TLR}$$
+{: #fixed-rank-dense-tlr-tlr }
 
 The goal of the first implementation stage is to compute
 
@@ -150,6 +154,7 @@ This structure is allows to split the matrix-multiplication across terms with a 
 We explain the machinery developed to compute the interior product $$A_{\mathrm{int}} B_{\mathrm{int}}$$, as this is the most computationally intensive operation and the most general. The same ideas are reused for the other products
 
 ### Regular TLR `GEMM`
+{: #regular-tlr-gemm }
 
 From here on we drop the $$\mathrm{int}$$ subscript and work with two square interior TLR sub-matrices. The storage naturally splits each operand into its dense diagonal and its low-rank off-diagonal part, $$A = D_A + O_A$$ and $$B = D_B + O_B$$, so that
 
@@ -179,6 +184,7 @@ $$
 For an off-diagonal tile $$C_{ij}$$, the first writer is either the $$O_A D_B$$ update or the $$D_A O_B$$ update. That first off-diagonal GEMM uses the original $$\beta$$. Every later contribution to the same tile uses accumulation mode, i.e. it is launched with $$\beta = 1$$. 
 
 #### The easy terms
+{: #the-easy-terms }
 
 The first three products are mapped to strided batched GEMMs. The diagonal product is a batch of independent dense tile GEMMs:
 
@@ -206,6 +212,7 @@ and is therefore evaluated in two batched GEMM stages. Consider first the produc
 By symmetry, the opposite holds for the product $$D_A * O_B$$.
 
 #### The $$O_A O_B$$ terms
+{: #oa-ob-terms }
 Here both operands are low-rank. With $$\widetilde A_{ik} = U_{ik} V_{ik}^{T}$$ and $$\widetilde B_{kj} = W_{kj} Z_{kj}^{T}$$, the $$(i,j)$$ output block is
 
 $$
@@ -262,6 +269,7 @@ Each stage is a collection of small GEMMs indexed by three tile indices: the out
 Fusing is best (biggest GEMMs, fewest launches), batching is the fallback for scattered data, and looping is reserved for a case we will see is unavoidable. The axes which can be fused depends on the ordering of the factors: tile column or tile major order.
 
 ##### The stride-1 axis
+{: #the-stride-1-axis }
 
 The factors are stored as $$[b, r, n_{\text{off}}]$$ arrays. Tiles are contiguous in memory only along the stride-1 axis, which depends on the tile layout.
 
@@ -273,6 +281,7 @@ The factors are stored as $$[b, r, n_{\text{off}}]$$ arrays. Tiles are contiguou
 This gives four possible layout combinations, which determines the optimization lever.
 
 ##### Lever 1: $$A$$'s layout determines how the $$k$$-sum is performed
+{: #lever-1-a-layout-k-sum }
 
 First consider one fixed output tile $$C_{ij}$$. Its low-rank update has the form
 
@@ -332,6 +341,7 @@ This statement concerns one fixed output tile. Across many output tiles, we stil
 This is why the two scheduling families differ in their traffic to $$C$$. In the write-once family, each $$C_{ij}$$ tile is formed by a GEMM that already includes the full $$k$$-sum. In the accumulate family, each $$C_{ij}$$ tile is read and written once per contributing $$k$$. Since Stage 3 operates on full $$b\times b$$ tiles, reducing the number of updates to $$C$$ is usually the dominant consideration.
 
 ##### Lever 2: $$B$$'s layout determines whether Stage 1 fuses over $$j$$
+{: #lever-2-b-layout-stage-1 }
 
 Stage 1 computes $$S_{ikj}=V_{ik}^{T}W_{kj}$$. For fixed $$(i,k)$$, the left operand $$V_{ik}^{T}$$ is reused for all output columns $$j$$, while the right operand $$W_{kj}$$ changes with $$j$$. Therefore, if the $$W_{kj}$$ factors are contiguous as $$j$$ varies, the products over $$j$$ can be fused into the $$N$$ dimension of one larger GEMM.
 
@@ -379,6 +389,7 @@ Combining the two levers gives the four layouts:
 Here $$n_k$$ is the number of contraction tiles. The count refers to batched-GEMM launches for the $$O_AO_B$$ term. In the write-once family, the computation uses three batched GEMM stages: one for Stage 1, one for Stage 2, and one for the final update to $$C$$. In the accumulate family, the first two stages can still be grouped, but the final update must be performed once per contraction tile $$k$$, giving $$2+n_k$$ GEMM launches.
 
 ##### Output traversal and workspace budget
+{: #output-traversal-workspace-budget }
 
 The previous discussion determines how the computation should be traversed. For each output tile $$C_{ij}$$, the intermediates $$S_{ikj}$$ and $$T_{ikj}$$ must be stored, or at least produced in a workspace large enough to feed the next GEMM stage. With a limited workspace budget for $$S$$ and $$T$$, the goal is to choose the largest panel of output tiles that can be processed without spilling or excessive packing.
 
@@ -408,7 +419,7 @@ where $$K_r$$ is the total rank over the contributing $$k$$ indices. Increasing 
 In the **accumulate family**, $$A$$ is stride-1 in $$i$$. The axis $k$ is fused in Stage 1 and to increase the size of the GEMM we can compute $$S_{Ikj}$$ for a set of rows $$I$$, so the computation proceeds column-by-column. Here the key workspace decision is different. Since the final update is serial in $$k$$, a deeper block of contraction indices increases the number of times the same $$C$$ tile is read and written before moving on. Consequently, under a limited workspace budget, it is more effective to keep the active $$k$$-block small and allocate the remaining workspace to enlarging the free output dimension $$J$$. In practice, this means fixing a single $$k$$ at a time and partially updating as many $$C_{ij}$$ tiles as possible, processing tile columns first
 
 ##### Pseudocode
-##### Pseudocode
+{: #pseudocode }
 
 The write-once (row) family, at full budget:
 
@@ -451,6 +462,7 @@ for run (block of contraction tiles K × columns J) sized to the budget:
         batched_gemm('N','N',  α, U[:,k], T[k],  β=1, C[:, :])   # distinct (i,j) tiles
 ```
 ##### Benchmark
+{: #benchmark }
 The benchmark below (not exhaustive) shows indeed that `A` tile-row major and `B` tile column major (the `ij` Stride-1 axis combination) results in the largest speedup
 
 | Matrix size | Tile size $$b$$ | Rank $$r$$ | Dense (ms) | kj (ms) | kk (ms) | ik (ms) | ij (ms) |
