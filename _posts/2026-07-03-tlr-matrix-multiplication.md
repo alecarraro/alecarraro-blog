@@ -198,7 +198,7 @@ Thus it is implemented as one strided batched GEMM with matrix size $$b \times b
 The product $$O_A D_B$$ can be written as
 
 $$
-(O_A D_B)*{ij} = U*{ij}\big(V_{ij}^{T}D_{jj}\big),
+(O_A D_B)_{ij} = U_{ij}\big(V_{ij}^{T}D_{jj}\big),
 \qquad i\neq j,
 $$
 
